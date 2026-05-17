@@ -139,6 +139,58 @@
         // URL de l'API (a changer si l'API est ailleurs)
         const API_URL = "http://localhost:8000";
 
+        // EXERCICE 1 : emojis par diagnostic
+        const icones = {
+            paludisme:   `<span class="text-3xl">🌡️</span>`, 
+            grippe: `<span class="text-3xl">❄️</span>`, 
+            typhoide:   `<span class="text-3xl">🦠</span>`, 
+            sain:   `<span class="text-3xl">✅</span>`  
+        };
+       
+        // EXERCICE 2 : Historique des 5 dernieres consultations
+        const historique = [];
+
+        function ajouterHistorique(patient, resultat) {
+            historique.unshift({
+                age: patient.age,
+                sexe: patient.sexe,
+                diagnostic: resultat.diagnostic,
+                probabilite: Math.round(resultat.probabilite * 100)
+            });
+            // Garder uniquement les 5 dernieres
+            if (historique.length > 5) historique.pop();
+        }
+
+        function genererHistoriqueHTML() {
+            if (historique.length === 0) return "";
+
+            const lignes = historique.map((h, i) => `
+                <tr class="border-b border-gray-100">
+                    <td class="py-2 px-2 text-sm text-gray-500">${i + 1}</td>
+                    <td class="py-2 px-2 text-sm">${h.age} ans (${h.sexe})</td>
+                    <td class="py-2 px-2 text-sm font-medium uppercase">${h.diagnostic}</td>
+                    <td class="py-2 px-2 text-sm text-right font-bold">${h.probabilite}%</td>
+                </tr>`).join("");
+
+            return `
+                <div class="bg-white rounded-xl shadow-md p-6 mt-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">
+                        Historique (5 dernieres consultations)
+                    </h3>
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-gray-300">
+                                <th class="py-2 px-2 text-left text-xs text-gray-600">#</th>
+                                <th class="py-2 px-2 text-left text-xs text-gray-600">Patient</th>
+                                <th class="py-2 px-2 text-left text-xs text-gray-600">Diagnostic</th>
+                                <th class="py-2 px-2 text-right text-xs text-gray-600">Proba</th>
+                            </tr>
+                        </thead>
+                        <tbody>${lignes}</tbody>
+                    </table>
+                </div>`;
+        }
+        
         async function diagnostiquer() {
             // 1. Recuperer les valeurs du formulaire
             const patient = {
@@ -191,7 +243,10 @@
                 // 6. Lire le resultat
                 const resultat = await response.json();
 
-                // 7. Afficher le resultat
+                // 7. Ajouter au tableau d'historique
+                ajouterHistorique(patient, resultat);
+
+                // 8. Afficher le resultat
                 afficherResultat(resultat);
 
             } catch (error) {
@@ -214,13 +269,13 @@
         function afficherResultat(r) {
             // Codes couleur par diagnostic
             const couleurs = {
-                palu:
+                paludisme:
                     {bg:"bg-red-100", text:"text-red-800",
                      bar:"bg-red-500", badge:"bg-red-500"},
                 grippe:
                     {bg:"bg-orange-100", text:"text-orange-800",
                      bar:"bg-orange-500", badge:"bg-orange-500"},
-                typh:
+                typhoide:
                     {bg:"bg-yellow-100", text:"text-yellow-800",
                      bar:"bg-yellow-500", badge:"bg-yellow-500"},
                 sain:
@@ -230,6 +285,7 @@
 
             const c = couleurs[r.diagnostic]
                       || couleurs["sain"];
+            const icone = icones[r.diagnostic] || icones["sain"];
             const pct = Math.round(r.probabilite * 100);
             const section =
                 document.getElementById("result-section");
@@ -241,8 +297,11 @@
                     <div class="${c.bg} rounded-lg p-4 mb-4">
                         <p class="text-sm text-gray-600">
                             Diagnostic :</p>
-                        <p class="text-2xl font-bold ${c.text} uppercase mt-1">
-                            ${r.diagnostic}</p>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="${c.text}">${icone}</span>
+                            <p class="text-2xl font-bold ${c.text} uppercase">
+                                ${r.diagnostic}</p>
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -268,7 +327,8 @@
                         <p class="text-sm text-gray-700">
                             ${r.message}</p>
                     </div>
-                </div>`;
+                </div>
+                ${genererHistoriqueHTML()}`;
         }
 
         function afficherErreur(msg) {
@@ -281,8 +341,10 @@
                     <p class="text-red-500 text-sm mt-2">
                         Verifiez votre connexion et reessayez.
                     </p>
-                </div>`;
+                </div>
+                ${genererHistoriqueHTML()}`;
         }
+
     </script>
 
 </body>
