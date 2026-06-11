@@ -3,6 +3,9 @@
 # Lab 3 - Integration de Modeles IA - ESP/UCAD
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from pathlib import Path
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
@@ -52,6 +55,20 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# --- Static frontend ---
+frontend_path = Path(__file__).resolve().parent.parent / "frontEnd"
+if frontend_path.exists():
+    app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
+else:
+    print(f"Frontend path not found: {frontend_path}")
+
+@app.get("/")
+def serve_frontend():
+    index_file = frontend_path / "index.html"
+    if index_file.exists():
+        return FileResponse(index_file)
+    return {"error": "Frontend not found"}
 
 # --- Chargement du modele (une seule fois au démarrage) ---
 print("Chargement du modele...")
