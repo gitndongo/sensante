@@ -71,11 +71,57 @@ def serve_frontend():
     return {"error": "Frontend not found"}
 
 # --- Chargement du modele (une seule fois au démarrage) ---
-print("Chargement du modele...")
+# print("Chargement du modele...")
+# model = joblib.load("models/model.pkl")
+# import urllib.request
+# import os
+# import joblib
+
+# MODEL_PATH = "models/model.pkl"
+# MODEL_URL = "https://raw.githubusercontent.com/gitndongo/sensante/main/models/model.pkl"
+
+# os.makedirs("models", exist_ok=True)
+
+# if not os.path.exists(MODEL_PATH):
+#     print("Téléchargement du modèle depuis GitHub...")
+#     urllib.request.urlretrieve(MODEL_URL, MODEL_PATH)
+
+# print("Chargement du modèle...")
+# model = joblib.load(MODEL_PATH)
+# le_sexe = joblib.load("models/encoder_sexe.pkl")
+# le_region = joblib.load("models/encoder_region.pkl")
+# feature_cols = joblib.load("models/feature_cols.pkl")
+import urllib.request
+import os
+import joblib
+
+BASE_URL = "https://raw.githubusercontent.com/gitndongo/sensante/main/models/"
+
+FILES = [
+    "model.pkl",
+    "encoder_sexe.pkl",
+    "encoder_region.pkl",
+    "feature_cols.pkl"
+]
+
+os.makedirs("models", exist_ok=True)
+
+for file in FILES:
+    path = f"models/{file}"
+    url = BASE_URL + file
+
+    if not os.path.exists(path):
+        print(f"Téléchargement {file}...")
+        urllib.request.urlretrieve(url, path)
+
+print("Chargement des modèles...")
+
 model = joblib.load("models/model.pkl")
 le_sexe = joblib.load("models/encoder_sexe.pkl")
 le_region = joblib.load("models/encoder_region.pkl")
 feature_cols = joblib.load("models/feature_cols.pkl")
+
+print("Modèles chargés OK")
 print(f"Modele charge : {list(model.classes_)}")
 
 # --- Routes ---
